@@ -9,13 +9,14 @@ from subprocess import call
 import synapseclient
 from synapseclient.entity import File
 from synapseclient.entity import Folder
+from synapseclient.activity import Activity
 
 syn = synapseclient.Synapse()
 syn.login()
 
-synapseProjectId = sys.argv[2]
-projectPath = sys.argv[3]
-sampleName = sys.argv[4]
+synapseProjectId = sys.argv[1]
+projectPath = sys.argv[2]
+sampleName = sys.argv[3]
 
 ## CREATE A FOLDER FOR THIS SAMPLE IN THE PROJECT
 sampleFolder = Folder(name=sampleName, parentId=synapseProjectId)
@@ -64,8 +65,14 @@ call(projectPath + '/script3.sh', shell=True)
 #####
 ## PUSH HTSEQ FILE OUTPUT AND STORE IN SYNAPSE
 #####
-htseqPath = projectPath + '/tophat-version/tophat_' + sampleName + '_R1_001/accepted_hits.novosort.sam.ensembl.htseq'
+htseqPath1 = projectPath + '/tophat-version/tophat_' + sampleName + '_R1_001/accepted_hits.novosort.sam.ensembl.htseq'
+htseqPath2 = projectPath + '/tophat-version/tophat_' + sampleName + '_R1_001/accepted_hits.novosort.sam.ucsc.htseq'
 
-htseqFile = File(path=htseqPath, parentId=sampleFolder['id'], synapseStore=True)
-htseqFile = syn.store(htseqFile, used=[cufflinksFile], activityName='htseq', activityDescription='htseq')
+htseqAct = Activity(used=[cufflinksFile], name='htseq', description='htseq')
 
+htseqFile1 = File(path=htseqPath1, parentId=sampleFolder['id'], synapseStore=True)
+htseqFile1 = syn.store(htseqFile1, activity=htseqAct)
+htseqAct = syn.getProvenance(htseqFile1['id'])
+
+htseqFile2 = File(path=htseqPath2, parentId=sampleFolder['id'], synapseStore=True)
+htseqFile2 = syn.store(htseqFile2, activity=htseqAct)
